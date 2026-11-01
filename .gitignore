@@ -1,0 +1,6 @@
+*.zip
+*.log
+*.cdae
+*.dds.cache
+test-output/
+.DS_Store
