@@ -32,4 +32,4 @@ the visual result and real driving behavior still need further testing. The
 recording below uses deliberately triggered test events in a stationary vehicle,
 and shows the current unfinished prototype, not actual driving or synchronization.
 
-![Early 3D flame prototype](docs/media/volume-prototype.gif)
+![Early 3D flame prototype](docs/media/warm-prototype.gif)

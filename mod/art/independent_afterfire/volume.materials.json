@@ -1,12 +1,12 @@
 {
   "iaf_outer": {
     "name": "iaf_outer", "mapTo": "iaf_outer", "class": "Material",
-    "Stages": [{"baseColorMap": "/art/independent_afterfire/volume_outer.png", "emissiveMap": "/art/independent_afterfire/volume_outer.png", "emissive": true, "emissiveFactor": [1, 0.6, 0.2], "emissiveIntensityNits": 500}, {}, {}, {}],
+    "Stages": [{"baseColorMap": "/art/independent_afterfire/volume_outer.png", "baseColorFactor": [1, 0.5, 0.08, 0.5], "emissiveMap": "/art/independent_afterfire/volume_outer.png", "emissive": true, "emissiveFactor": [0.6, 0.14, 0.01], "emissiveIntensityNits": 100}, {}, {}, {}],
     "activeLayers": 1, "translucent": true, "translucentBlendOp": "AddAlpha", "doubleSided": true, "castShadows": false, "version": 1.5
   },
   "iaf_core": {
     "name": "iaf_core", "mapTo": "iaf_core", "class": "Material",
-    "Stages": [{"baseColorMap": "/art/independent_afterfire/volume_core.png", "emissiveMap": "/art/independent_afterfire/volume_core.png", "emissive": true, "emissiveFactor": [1, 0.9, 0.65], "emissiveIntensityNits": 900}, {}, {}, {}],
+    "Stages": [{"baseColorMap": "/art/independent_afterfire/volume_core.png", "baseColorFactor": [1, 0.8, 0.2, 0.65], "emissiveMap": "/art/independent_afterfire/volume_core.png", "emissive": true, "emissiveFactor": [0.8, 0.45, 0.08], "emissiveIntensityNits": 100}, {}, {}, {}],
     "activeLayers": 1, "translucent": true, "translucentBlendOp": "AddAlpha", "doubleSided": true, "castShadows": false, "version": 1.5
   }
 }
