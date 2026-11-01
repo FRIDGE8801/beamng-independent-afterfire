@@ -9,8 +9,8 @@ local function emit(engine, event)
   for _, outlet in pairs(ends) do
     if outlet.finish and outlet.start and (outlet.afterFireVisualCoef or 1) > 0 and not obj:inWater(outlet.finish) then
       obj:queueGameEngineLua(string.format(
-        "if extensions.iafRenderer then extensions.iafRenderer.fire(%d,%d,%d,%.3f) end",
-        obj:getId(), outlet.finish, outlet.start, event.intensity))
+        "if extensions.iafRenderer then extensions.iafRenderer.fire(%d,%d,%d,%.3f,%q) end",
+        obj:getId(), outlet.finish, outlet.start, event.intensity, event.kind))
       stats.emitted = stats.emitted + 1
     end
   end

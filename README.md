@@ -11,6 +11,10 @@ not include assets or source from other mods. BeamNG.drive is required.
 
 The current implementation samples vehicle state once per graphics update.
 Short limiter cuts between updates can be missed; synchronization is unfinished.
+Different burst shapes are used for limiter, shift, and throttle-lift events.
+The renderer uses bounded velocity prediction to reduce the visible lag between
+the soft-body vehicle and the flame; it is experimental and must be checked at
+different frame rates, camera angles, and on additional vehicles.
 The archive is experimental and has not been installed in the normal game.
 
 ## Development status
@@ -32,4 +36,4 @@ the visual result and real driving behavior still need further testing. The
 recording below uses deliberately triggered test events in a stationary vehicle,
 and shows the current unfinished prototype, not actual driving or synchronization.
 
-![Early 3D flame prototype](docs/media/warm-prototype.gif)
+![Experimental burst profiles; events are manually triggered](docs/media/flame-profiles.gif)

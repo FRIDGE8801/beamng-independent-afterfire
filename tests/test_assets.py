@@ -15,8 +15,8 @@ for material in materials.values():
         assert asset.is_file(), asset
     assert material['translucent'] and stage['emissive']
 
-for version in (1, 2):
-    tree = ET.parse(assets / f'flame_volume_v2_{version}.dae')
+for version in (1, 2, 3, 4):
+    tree = ET.parse(assets / f'flame_volume_v3_{version}.dae')
     geometries = tree.findall('.//c:geometry', ns)
     assert len(geometries) == 2
     for geometry in geometries:
