@@ -1,0 +1,12 @@
+{
+  "iaf_outer": {
+    "name": "iaf_outer", "mapTo": "iaf_outer", "class": "Material",
+    "Stages": [{"baseColorMap": "/art/independent_afterfire/volume_outer.png", "emissiveMap": "/art/independent_afterfire/volume_outer.png", "emissive": true, "emissiveFactor": [1, 0.6, 0.2], "emissiveIntensityNits": 500}, {}, {}, {}],
+    "activeLayers": 1, "translucent": true, "translucentBlendOp": "AddAlpha", "doubleSided": true, "castShadows": false, "version": 1.5
+  },
+  "iaf_core": {
+    "name": "iaf_core", "mapTo": "iaf_core", "class": "Material",
+    "Stages": [{"baseColorMap": "/art/independent_afterfire/volume_core.png", "emissiveMap": "/art/independent_afterfire/volume_core.png", "emissive": true, "emissiveFactor": [1, 0.9, 0.65], "emissiveIntensityNits": 900}, {}, {}, {}],
+    "activeLayers": 1, "translucent": true, "translucentBlendOp": "AddAlpha", "doubleSided": true, "castShadows": false, "version": 1.5
+  }
+}

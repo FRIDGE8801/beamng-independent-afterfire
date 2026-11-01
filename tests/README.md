@@ -15,3 +15,6 @@ afterfire capability.
 The graphics-update loop can miss short physics events between frames. The
 current tests intentionally do not claim frame-perfect limiter synchronization
 or verify the visual result during normal driving.
+
+Run `python tests/test_assets.py` from the project root to check the packaged
+geometry, materials, textures, and references without launching the game.

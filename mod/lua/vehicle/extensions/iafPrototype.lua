@@ -1,4 +1,4 @@
--- Temporary BeamNG-native particle preview; original rendering is not yet built.
+-- Trigger the independent prototype renderer at each eligible exhaust outlet.
 local detector = require('extensions/iafEventDetector')
 local M = {}
 local state = detector.new()
@@ -8,7 +8,9 @@ local function emit(engine, event)
   local ends = engine.thermals and engine.thermals.exhaustEndNodes or {}
   for _, outlet in pairs(ends) do
     if outlet.finish and outlet.start and (outlet.afterFireVisualCoef or 1) > 0 and not obj:inWater(outlet.finish) then
-      obj:addParticleByNodesRelative(outlet.finish, outlet.start, -4, 61, 0, 1)
+      obj:queueGameEngineLua(string.format(
+        "if extensions.iafRenderer then extensions.iafRenderer.fire(%d,%d,%d,%.3f) end",
+        obj:getId(), outlet.finish, outlet.start, event.intensity))
       stats.emitted = stats.emitted + 1
     end
   end
