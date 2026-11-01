@@ -28,6 +28,13 @@ experimental prototype alongside another afterfire mod: both may emit effects.
 The current bootstrap targets the player vehicle and does not modify the
 vehicle's JBeam parts.
 
+## Development package
+
+Run `python tools/package.py` to create `dist/independent_afterfire_dev.zip`.
+The ZIP contains the runtime files only. Try this development build in a separate
+BeamNG user profile with other afterfire mods disabled. The current detector
+still samples graphics updates, so short limiter cuts can be missed.
+
 ## Testing
 
 See [tests/README.md](tests/README.md). Basic event-detector checks and
