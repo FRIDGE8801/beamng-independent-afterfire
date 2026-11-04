@@ -19,4 +19,5 @@ with ZipFile(output) as archive:
     assert archive.testzip() is None
     assert 'info.json' in archive.namelist()
     assert 'scripts/independent_afterfire/modScript.lua' in archive.namelist()
+    assert 'lua/vehicle/controller/iafSignalSampler.lua' in archive.namelist()
 print(output)

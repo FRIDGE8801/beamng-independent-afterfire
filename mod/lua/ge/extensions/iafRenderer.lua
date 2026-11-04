@@ -54,21 +54,33 @@ local function acquire(id, first, last, pos, q)
   pools[key]=p
   return p
 end
-local function fire(id,last,first,intensity,kind)
+local function fire(id,last,first,intensity,kind,interval,age)
   local vehicle=be and be:getObjectByID(id)
   if not vehicle then return false end
   local pos,q=pose(vehicle,first,last)
   if not pos then return false end
+  local profile=profiles[kind] or profiles.shift
+  local power=math.max(0,math.min(1,tonumber(intensity) or 0))
+  if power<=0 then return false end
+  local duration=profile.duration+power*.025
+  if kind=='limiter' then
+    -- Measured cut cadence sets an upper bound, leaving a dark part of each
+    -- cycle. The first cut has no measured interval yet, so stays short too.
+    local period=tonumber(interval) or 0
+    duration=math.min(duration,period>0 and period*.55 or .06)
+  end
+  age=math.max(0,tonumber(age) or 0)
+  if age>=duration then return false end
   local p=acquire(id,first,last,pos,q)
   if not p then return false end
   p.variant=1+((p.variant or 0)%4)
-  local profile=profiles[kind] or profiles.shift
-  local power=math.max(0,math.min(1,tonumber(intensity) or 0))
-  local strength=.55+power*.45
+  -- Outlet attenuation must affect the visible size. A large fixed size floor
+  -- would make a quiet stock exhaust almost as strong as an open race exhaust.
+  local strength=math.sqrt(power)
   p.width=strength*profile.width
   p.length=strength*profile.length*(.92+p.variant*.04)
-  p.duration=profile.duration+power*.025
-  p.age,p.idle=0,0
+  p.duration=duration
+  p.age,p.idle,p.justFired=age,0,true
   return true
 end
 local function onPreRender(dtReal,dtSim)
@@ -79,7 +91,10 @@ local function onPreRender(dtReal,dtSim)
     if vehicle then pos,q=pose(vehicle,p.first,p.last) end
     if not pos then destroy(key)
     else
-      p.age,p.idle=p.age+dt,p.idle+dt
+      -- fire already supplied the age at the end of this physics frame.
+      -- Advancing by the whole frame again would erase short captured cuts.
+      if p.justFired then p.justFired=false else p.age=p.age+dt end
+      p.idle=p.idle+dt
       local lit=p.duration and p.age<p.duration
       local life=lit and p.age/p.duration or 1
       local growth=math.min(1,life*5)*math.min(1,(1-life)*3)
@@ -110,5 +125,6 @@ local function clearVehicle(id)
 end
 M.onVehicleDestroyed=clearVehicle
 M.onVehicleSpawned=clearVehicle
+M.onVehicleResetted=clearVehicle
 M.getActiveCount=getActiveCount
 return M

@@ -1,7 +1,6 @@
 -- Trigger the independent prototype renderer at each eligible exhaust outlet.
-local detector = require('extensions/iafEventDetector')
 local M = {}
-local state = detector.new()
+local sampler
 local stats = {events = 0, emitted = 0, lastKind = ''}
 
 local function emit(engine, event)
@@ -9,27 +8,19 @@ local function emit(engine, event)
   for _, outlet in pairs(ends) do
     if outlet.finish and outlet.start and (outlet.afterFireVisualCoef or 1) > 0 and not obj:inWater(outlet.finish) then
       obj:queueGameEngineLua(string.format(
-        "if extensions.iafRenderer then extensions.iafRenderer.fire(%d,%d,%d,%.3f,%q) end",
-        obj:getId(), outlet.finish, outlet.start, event.intensity, event.kind))
+        "local r=rawget(extensions,'iafRenderer'); if r then r.fire(%d,%d,%d,%.3f,%q,%.6f,%.6f) end",
+        obj:getId(), outlet.finish, outlet.start, event.intensity * math.min(1, outlet.afterFireVisualCoef or 1),
+        event.kind, event.interval or 0, event.age or 0))
       stats.emitted = stats.emitted + 1
     end
   end
 end
 
-local function updateGFX(dt)
+local function updateGFX()
   local engine = powertrain.getDevice('mainEngine')
+  if not sampler then return end
+  local event = sampler.takeEvent()
   if not engine then return end
-  local values = electrics.values
-  local currentAV = math.abs(tonumber(engine.outputAV1) or 0)
-  local limitAV = tonumber(engine.revLimiterAV) or tonumber(engine.maxAV) or 1
-  local event = detector.advance(state, {
-    running = not (engine.isDisabled or engine.isStalled),
-    throttle = values.throttle_input or values.throttle or engine.requestedThrottle or 0,
-    rpmFraction = currentAV / math.max(limitAV, 1),
-    capability = math.max(tonumber(engine.instantAfterFireCoef) or 0, tonumber(engine.sustainedAfterFireCoef) or 0),
-    limiterCut = engine.revLimiterActive == true,
-    gear = values.gearIndex,
-  }, dt)
   if event then
     stats.events = stats.events + 1
     stats.lastKind = event.kind
@@ -38,13 +29,36 @@ local function updateGFX(dt)
 end
 
 local function reset()
-  state = detector.new()
+  if sampler then sampler.reset() end
   stats = {events = 0, emitted = 0, lastKind = ''}
 end
 
-local function getStats() return stats end
+local function onExtensionLoaded()
+  local existing = controller.getController('iafSignalSampler')
+  if existing then
+    log('E', 'iafPrototype', 'Signal sampler name is already in use; attachment skipped')
+    return
+  end
+  sampler = controller.loadControllerExternal('iafSignalSampler', 'iafSignalSampler', {})
+  if updateCorePhysicsStepEnabled then updateCorePhysicsStepEnabled() end
+end
+
+local function onExtensionUnloaded()
+  if sampler and controller.getController('iafSignalSampler') == sampler then
+    controller.unloadControllerExternal('iafSignalSampler')
+    if updateCorePhysicsStepEnabled then updateCorePhysicsStepEnabled() end
+  end
+  sampler = nil
+end
+
+local function getStats()
+  return {events=stats.events, emitted=stats.emitted, lastKind=stats.lastKind,
+    sampling=sampler and 'physics' or 'unavailable', signal=sampler and sampler.getStats() or nil}
+end
 
 M.updateGFX = updateGFX
 M.onReset = reset
+M.onExtensionLoaded = onExtensionLoaded
+M.onExtensionUnloaded = onExtensionUnloaded
 M.getStats = getStats
 return M

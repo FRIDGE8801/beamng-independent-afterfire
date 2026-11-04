@@ -3,10 +3,10 @@ local M = {}
 local function clamp(x, lo, hi) return math.max(lo, math.min(hi, x)) end
 
 function M.new()
-  return {time = 0, lastEvent = -10, prevThrottle = nil, prevGear = nil, prevCut = false}
+  return {time = 0, lastTransient = -10, prevThrottle = nil, prevCut = nil}
 end
 
--- Returns at most one event per graphics update. This does not mutate engine state
+-- Called after each physics step by our auxiliary controller. Does not mutate engine state
 -- or consume BeamNG's afterfire queues.
 function M.advance(state, input, dt)
   dt = clamp(tonumber(dt) or 0, 0, 0.1)
@@ -17,11 +17,15 @@ function M.advance(state, input, dt)
   local cut = input.limiterCut == true
   local gear = tonumber(input.gear)
   local kind
+  local edge = cut and state.prevCut == false
+  local interval = edge and state.lastCut and (state.time - state.lastCut) or nil
+  if edge then state.lastCut = state.time end
 
   if input.running ~= false and capability > 0.05 and rpmFraction >= 0.55 then
-    if cut and not state.prevCut and throttle > 0.6 then
+    if edge and throttle > 0.6 then
       kind = 'limiter'
-    elseif gear and state.prevGear and gear > 0 and state.prevGear > 0 and gear ~= state.prevGear
+    elseif gear and gear > 0 and state.lastForwardGear and gear ~= state.lastForwardGear
+        and state.time - state.lastForwardTime <= 0.5
         and math.max(throttle, state.prevThrottle or 0) > 0.5 then
       kind = 'shift'
     elseif state.prevThrottle and state.prevThrottle > 0.65 and throttle < 0.3 then
@@ -29,13 +33,23 @@ function M.advance(state, input, dt)
     end
   end
 
-  state.prevThrottle, state.prevGear, state.prevCut = throttle, gear, cut
+  -- A manual gearbox commonly reports neutral while the clutch is open.
+  -- Remember the last engaged forward gear briefly, but never across reverse.
+  if gear and gear > 0 then
+    state.lastForwardGear, state.lastForwardTime = gear, state.time
+  elseif gear and gear < 0 then
+    state.lastForwardGear, state.lastForwardTime = nil, nil
+  end
+  state.prevThrottle, state.prevCut = throttle, cut
   if not kind then return nil end
-  -- Limiter events follow observed cuts; lift and shift use a short debounce.
-  local gap = kind == 'limiter' and 0.035 or 0.16
-  if state.time - state.lastEvent < gap then return nil end
-  state.lastEvent = state.time
-  return {kind = kind, intensity = clamp(capability * rpmFraction, 0.1, 1)}
+  -- Real limiter edges need no synthetic beat. A limiter burst must not suppress
+  -- the driver's next throttle lift through the transient debounce either.
+  if kind ~= 'limiter' then
+    if state.time - state.lastTransient < 0.16 then return nil end
+    state.lastTransient = state.time
+  end
+  return {kind = kind, intensity = clamp(capability * rpmFraction, 0.1, 1),
+    time = state.time, interval = kind == 'limiter' and interval or nil}
 end
 
 return M

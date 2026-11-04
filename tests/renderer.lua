@@ -26,6 +26,8 @@ setfenv(chunk, env)
 local renderer = chunk()
 assert(renderer.fire(999,2,1,1,'shift') == false)
 assert(#allocated == 0)
+assert(renderer.fire(123,2,1,0,'limiter') == false)
+assert(#allocated == 0, 'zero intensity must not create a flame pool')
 assert(renderer.fire(123,2,1,.8,'limiter'))
 assert(#allocated == 4)
 for _,o in ipairs(allocated) do
@@ -39,6 +41,23 @@ local function visible()
   return count
 end
 assert(visible() == 1)
+local strongScale
+for _,o in ipairs(allocated) do if not o.hidden then strongScale=o.scale.x end end
+assert(renderer.fire(123,2,1,.04,'limiter'))
+renderer.onPreRender(.02,.02)
+local weakScale
+for _,o in ipairs(allocated) do if not o.hidden then weakScale=o.scale.x end end
+assert(weakScale<strongScale*.3, 'weak exhaust attenuation must substantially reduce flame size')
+assert(renderer.fire(123,2,1,.8,'limiter'))
+renderer.onPreRender(.02,.02)
+renderer.onPreRender(.02,.02)
+assert(visible() == 1)
+renderer.onPreRender(.05,.05)
+assert(visible() == 0, 'limiter burst must leave a dark gap before the next cut')
+assert(renderer.fire(123,2,1,.8,'limiter',.1,.06) == false, 'expired cuts must not be replayed')
+assert(renderer.fire(123,2,1,.8,'limiter',.1,.04))
+renderer.onPreRender(.03,.03)
+assert(visible() == 1, 'first render must not age a captured event by a second frame')
 vehicle.origin = vec3(50,-20,0)
 renderer.onPreRender(.02,.02)
 for _,o in ipairs(allocated) do assert((o.position - vec3(50,-19,0)):length() < 0.0001) end
@@ -58,6 +77,9 @@ for i=checkpoint+1,#allocated do if not allocated[i].deleted then living=living+
 assert(living == 64, 'outlet pools must have a fixed upper bound')
 renderer.onVehicleSpawned(123)
 for _,o in ipairs(allocated) do assert(o.deleted) end
+assert(renderer.fire(123,2,1,.8,'shift'))
+renderer.onVehicleResetted(123)
+for _,o in ipairs(allocated) do assert(o.deleted, 'reset must cancel flames at the old pose') end
 assert(renderer.fire(123,2,1,.8,'shift'))
 for i=1,610 do renderer.onPreRender(.1,.1) end
 for _,o in ipairs(allocated) do assert(o.deleted, 'idle pools must be released') end
